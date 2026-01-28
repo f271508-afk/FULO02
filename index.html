@@ -89,7 +89,7 @@
                                 </div>
                             </div>
 
-                            <!-- 新增：面積與周長可編輯欄位 -->
+                            <!-- 面積與周長可編輯欄位 -->
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <label class="input-group-label text-blue-500">空間面積 m²</label>
@@ -195,7 +195,7 @@
 
             <!-- 右側清單與單價編修 -->
             <div class="lg:col-span-8 space-y-6">
-                <!-- 預算清單 -->
+                <!-- 預預算清單 -->
                 <div class="card overflow-hidden border border-slate-200">
                     <div class="bg-slate-50 p-4 border-b flex justify-between items-center">
                         <h3 class="font-bold text-slate-700">工程預算明細表</h3>
@@ -255,7 +255,7 @@
             { id: 'basin_std', cat: '衛浴設備', name: '標準型面盆+浴櫃組', unit: '套', price: 18000 },
             { id: 'basin_basic', cat: '衛浴設備', name: '經濟型壁掛面盆', unit: '套', price: 6500 },
             { id: 'shower', cat: '衛浴設備', name: '淋浴龍頭及花灑', unit: '組', price: 6500 },
-            { id: 'bath', cat: '衛浴設備', name: '壓克力浴缸 (含施工)', unit: '組', price: 32000 },
+            { id: 'bath', cat: '衛浴設備', name: '壓克力浴缸 (含浴缸座及龍頭)', unit: '組', price: 32000 },
             { id: 'vent_heater', cat: '衛浴設備', name: '四合一暖風機', unit: '組', price: 16500 },
             { id: 'vent_fan', cat: '衛浴設備', name: '通風扇', unit: '組', price: 2500 },
             { id: 'door', cat: '其他', name: '浴室木門 (含門檻)', unit: '樘', price: 8500 },
@@ -279,14 +279,12 @@
         function handleReverseInput(source) {
             if (source === 'area') {
                 const area = parseFloat(document.getElementById('calc_area').value) || 0;
-                // 假設空間為正方形推算
                 const side = Math.sqrt(area);
                 document.getElementById('len').value = side.toFixed(2);
                 document.getElementById('wid').value = side.toFixed(2);
                 document.getElementById('calc_perimeter').value = (side * 4).toFixed(2);
             } else {
                 const perimeter = parseFloat(document.getElementById('calc_perimeter').value) || 0;
-                // 假設空間為正方形推算
                 const side = perimeter / 4;
                 document.getElementById('len').value = side.toFixed(2);
                 document.getElementById('wid').value = side.toFixed(2);
@@ -322,7 +320,6 @@
             const area = L * W;
             const perimeter = (L + W) * 2;
             
-            // 同步顯示計算結果到編輯欄位 (確保同步)
             document.getElementById('calc_area').value = area.toFixed(2);
             document.getElementById('calc_perimeter').value = perimeter.toFixed(2);
 
@@ -427,22 +424,18 @@
 
         function exportToExcel() {
             const wb = XLSX.utils.book_new();
-            
-            // 分頁 1: 報價明細
             const rows = Array.from(document.querySelectorAll("#budget_body tr")).map(tr => 
                 Array.from(tr.querySelectorAll("td")).map(td => td.innerText.replace("NT$ ", "").replace(/,/g, ""))
             );
             const data = [["類別", "項目名稱", "數量", "單位", "單價", "小計"], ...rows];
             XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), "預算明細表");
             
-            // 分頁 2: 單價設定
             const priceData = [["項目ID", "項目名稱", "類別", "單位", "當前設定單價"]];
             masterLibrary.forEach(item => {
                 priceData.push([item.id, item.name, item.cat, item.unit, getEffectivePrice(item.id)]);
             });
             XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(priceData), "單價設定");
 
-            // 分頁 3: 規格參數
             const configData = [
                 ["規格名稱", "數值"],
                 ["長度", document.getElementById('len').value],
