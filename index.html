@@ -24,6 +24,9 @@
             opacity: 1; 
             transform: translateY(0);
         }
+        .input-group-label { @apply text-xs text-slate-400 font-bold block mb-1; }
+        .input-field { @apply w-full p-2.5 border rounded-lg bg-slate-50 focus:ring-2 focus:ring-blue-400 outline-none transition-all; }
+        .input-field-calc { @apply w-full p-2.5 border rounded-lg bg-blue-50/50 border-blue-100 focus:ring-2 focus:ring-blue-400 outline-none transition-all font-medium text-blue-700; }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -41,7 +44,7 @@
             <div class="flex flex-wrap gap-2">
                 <button onclick="exportToExcel()" class="flex items-center gap-1 text-xs text-white bg-emerald-600 hover:bg-emerald-700 font-bold px-4 py-2 rounded-lg shadow-sm transition-all active:scale-95">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    匯出 EXCEL (含單價庫)
+                    匯出 EXCEL
                 </button>
                 <label class="flex items-center gap-1 text-xs text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 font-bold px-4 py-2 rounded-lg shadow-sm cursor-pointer transition-all active:scale-95">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
@@ -65,7 +68,7 @@
                         <div class="space-y-4">
                             <!-- 配置等級 -->
                             <div>
-                                <label class="text-xs text-slate-400 font-bold block mb-1">浴室配置等級</label>
+                                <label class="input-group-label">浴室配置等級</label>
                                 <select id="config_type" class="w-full p-2.5 border rounded-lg bg-white shadow-sm font-medium outline-none focus:ring-2 focus:ring-blue-400" onchange="applyDefaultDimensions(); updateCalculation()">
                                     <option value="2">二件式 (馬桶+臉盆)</option>
                                     <option value="3_shower" selected>三件式 (馬桶+臉盆+淋浴)</option>
@@ -74,29 +77,43 @@
                                 </select>
                             </div>
 
+                            <!-- 基礎尺寸 -->
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label class="text-xs text-slate-400 font-bold block mb-1">空間長度 (L)</label>
-                                    <input type="number" id="len" value="2.5" step="0.1" class="w-full p-2.5 border rounded-lg bg-slate-50 focus:ring-2 focus:ring-blue-400 outline-none" oninput="updateCalculation()">
+                                    <label class="input-group-label">空間長度 (L) m</label>
+                                    <input type="number" id="len" value="2.5" step="0.1" class="input-field" oninput="handleDimInput('len')">
                                 </div>
                                 <div>
-                                    <label class="text-xs text-slate-400 font-bold block mb-1">空間寬度 (W)</label>
-                                    <input type="number" id="wid" value="1.6" step="0.1" class="w-full p-2.5 border rounded-lg bg-slate-50 focus:ring-2 focus:ring-blue-400 outline-none" oninput="updateCalculation()">
+                                    <label class="input-group-label">空間寬度 (W) m</label>
+                                    <input type="number" id="wid" value="1.6" step="0.1" class="input-field" oninput="handleDimInput('wid')">
                                 </div>
                             </div>
+
+                            <!-- 新增：面積與周長可編輯欄位 -->
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label class="text-xs text-slate-400 font-bold block mb-1">隔間高度 (m)</label>
-                                    <input type="number" id="h_wall" value="3.15" step="0.01" class="w-full p-2.5 border rounded-lg bg-slate-50 focus:ring-2 focus:ring-blue-400 outline-none" oninput="updateCalculation()">
+                                    <label class="input-group-label text-blue-500">空間面積 m²</label>
+                                    <input type="number" id="calc_area" step="0.01" class="input-field-calc" oninput="handleReverseInput('area')">
                                 </div>
                                 <div>
-                                    <label class="text-xs text-slate-400 font-bold block mb-1">貼磚高度 (m)</label>
-                                    <input type="number" id="h_tile" value="2.4" step="0.1" class="w-full p-2.5 border rounded-lg bg-slate-50 focus:ring-2 focus:ring-blue-400 outline-none" oninput="updateCalculation()">
+                                    <label class="input-group-label text-blue-500">空間周長 m</label>
+                                    <input type="number" id="calc_perimeter" step="0.01" class="input-field-calc" oninput="handleReverseInput('perimeter')">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="input-group-label">隔間高度 (m)</label>
+                                    <input type="number" id="h_wall" value="3.15" step="0.01" class="input-field" oninput="updateCalculation()">
+                                </div>
+                                <div>
+                                    <label class="input-group-label">貼磚高度 (m)</label>
+                                    <input type="number" id="h_tile" value="2.4" step="0.1" class="input-field" oninput="updateCalculation()">
                                 </div>
                             </div>
                             <div>
-                                <label class="text-xs text-slate-400 font-bold block mb-1">地坪陰角數 (個)</label>
-                                <input type="number" id="corner_count" value="4" step="1" class="w-full p-2.5 border rounded-lg bg-slate-50 focus:ring-2 focus:ring-blue-400 outline-none" oninput="updateCalculation()">
+                                <label class="input-group-label">地坪陰角數 (個)</label>
+                                <input type="number" id="corner_count" value="4" step="1" class="input-field" oninput="updateCalculation()">
                             </div>
 
                             <hr class="my-4 border-slate-100">
@@ -104,7 +121,7 @@
                             <!-- 磁磚尺寸等級選擇 -->
                             <div class="grid grid-cols-1 gap-4">
                                 <div>
-                                    <label class="text-xs text-slate-400 font-bold block mb-1">壁磚規格 (選擇後連動單價)</label>
+                                    <label class="input-group-label">壁磚規格 (連動單價)</label>
                                     <select id="wall_tile_level" class="w-full p-2.5 border rounded-lg bg-white shadow-sm font-medium outline-none focus:ring-2 focus:ring-blue-400 text-sm" onchange="updateCalculation()">
                                         <option value="wall_3060_std" selected>30x60 標準國產壁磚</option>
                                         <option value="wall_3060_lux">30x60 進口高級壁磚</option>
@@ -112,7 +129,7 @@
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="text-xs text-slate-400 font-bold block mb-1">地磚規格 (選擇後連動單價)</label>
+                                    <label class="input-group-label">地磚規格 (連動單價)</label>
                                     <select id="floor_tile_level" class="w-full p-2.5 border rounded-lg bg-white shadow-sm font-medium outline-none focus:ring-2 focus:ring-blue-400 text-sm" onchange="updateCalculation()">
                                         <option value="floor_3030_std" selected>30x30 止滑標準磚</option>
                                         <option value="floor_3060_std">30x60 國產款式地磚</option>
@@ -124,7 +141,7 @@
                             <hr class="my-4 border-slate-100">
 
                             <div>
-                                <label class="text-xs text-slate-400 font-bold block mb-1">馬桶款式等級</label>
+                                <label class="input-group-label">馬桶款式等級</label>
                                 <select id="toilet_level" class="w-full p-2.5 border rounded-lg bg-white shadow-sm font-medium outline-none focus:ring-2 focus:ring-blue-400" onchange="updateCalculation()">
                                     <option value="automatic">全自動智慧馬桶</option>
                                     <option value="bidet" selected>單體馬桶 + 免治座</option>
@@ -133,7 +150,7 @@
                             </div>
 
                             <div>
-                                <label class="text-xs text-slate-400 font-bold block mb-1">面盆款式等級</label>
+                                <label class="input-group-label">面盆款式等級</label>
                                 <select id="basin_level" class="w-full p-2.5 border rounded-lg bg-white shadow-sm font-medium outline-none focus:ring-2 focus:ring-blue-400" onchange="updateCalculation()">
                                     <option value="luxury">豪華型雙層石材盆+浴櫃</option>
                                     <option value="standard" selected>標準型面盆 + 浴櫃</option>
@@ -142,7 +159,7 @@
                             </div>
 
                             <div>
-                                <label class="text-xs text-slate-400 font-bold block mb-1">通風設備選擇</label>
+                                <label class="input-group-label">通風設備選擇</label>
                                 <select id="vent_level" class="w-full p-2.5 border rounded-lg bg-white shadow-sm font-medium outline-none focus:ring-2 focus:ring-blue-400" onchange="updateCalculation()">
                                     <option value="heater">四合一暖風機</option>
                                     <option value="fan" selected>通風扇</option>
@@ -219,7 +236,7 @@
 
     <script>
         const DOOR_AREA = 1.87; 
-        const STORAGE_KEY = 'bathroom_calculator_v12';
+        const STORAGE_KEY = 'bathroom_calculator_v13';
 
         const masterLibrary = [
             { id: 'wall_3060_std', cat: '泥作工程', name: '30x60 標準國產壁磚', unit: 'm²', price: 2200 },
@@ -247,6 +264,37 @@
 
         let userPrices = {}; 
 
+        // 處理尺寸輸入 (長/寬改變 -> 面積/周長改變)
+        function handleDimInput(source) {
+            const L = parseFloat(document.getElementById('len').value) || 0;
+            const W = parseFloat(document.getElementById('wid').value) || 0;
+            
+            document.getElementById('calc_area').value = (L * W).toFixed(2);
+            document.getElementById('calc_perimeter').value = ((L + W) * 2).toFixed(2);
+            
+            updateCalculation();
+        }
+
+        // 處理反向輸入 (面積/周長改變 -> 長/寬改變)
+        function handleReverseInput(source) {
+            if (source === 'area') {
+                const area = parseFloat(document.getElementById('calc_area').value) || 0;
+                // 假設空間為正方形推算
+                const side = Math.sqrt(area);
+                document.getElementById('len').value = side.toFixed(2);
+                document.getElementById('wid').value = side.toFixed(2);
+                document.getElementById('calc_perimeter').value = (side * 4).toFixed(2);
+            } else {
+                const perimeter = parseFloat(document.getElementById('calc_perimeter').value) || 0;
+                // 假設空間為正方形推算
+                const side = perimeter / 4;
+                document.getElementById('len').value = side.toFixed(2);
+                document.getElementById('wid').value = side.toFixed(2);
+                document.getElementById('calc_area').value = (side * side).toFixed(2);
+            }
+            updateCalculation();
+        }
+
         function applyDefaultDimensions() {
             const type = document.getElementById('config_type').value;
             const lenInput = document.getElementById('len');
@@ -254,6 +302,8 @@
             if (type === '2') { lenInput.value = "1.7"; widInput.value = "1.5"; }
             else if (type === '3_shower' || type === '3_bath') { lenInput.value = "2.5"; widInput.value = "1.6"; }
             else if (type === '4') { lenInput.value = "3.3"; widInput.value = "1.6"; }
+            
+            handleDimInput();
         }
 
         function getEffectivePrice(id) {
@@ -271,6 +321,11 @@
             
             const area = L * W;
             const perimeter = (L + W) * 2;
+            
+            // 同步顯示計算結果到編輯欄位 (確保同步)
+            document.getElementById('calc_area').value = area.toFixed(2);
+            document.getElementById('calc_perimeter').value = perimeter.toFixed(2);
+
             const wallArea = Math.max(0, perimeter * H_wall - DOOR_AREA);
             const tileArea = Math.max(0, perimeter * H_tile - DOOR_AREA);
             const wpArea = area + (perimeter - 0.85) * 1 + corners * 0.16;
@@ -367,28 +422,7 @@
 
         function updateUserPrice(id, val) {
             userPrices[id] = parseFloat(val) || 0;
-            // 局部更新預算明細，但不完整重新渲染 Editor 以防輸入焦點丟失
-            const config = {
-                type: document.getElementById('config_type').value,
-                wallTileId: document.getElementById('wall_tile_level').value,
-                floorTileId: document.getElementById('floor_tile_level').value,
-                toilet: document.getElementById('toilet_level').value,
-                basin: document.getElementById('basin_level').value,
-                vent: document.getElementById('vent_level').value
-            };
-            const L = parseFloat(document.getElementById('len').value) || 0;
-            const W = parseFloat(document.getElementById('wid').value) || 0;
-            const H_wall = parseFloat(document.getElementById('h_wall').value) || 0;
-            const H_tile = parseFloat(document.getElementById('h_tile').value) || 0;
-            const corners = parseInt(document.getElementById('corner_count').value) || 0;
-            const area = L * W;
-            const perimeter = (L + W) * 2;
-            const wallArea = Math.max(0, perimeter * H_wall - DOOR_AREA);
-            const tileArea = Math.max(0, perimeter * H_tile - DOOR_AREA);
-            const wpArea = area + (perimeter - 0.85) * 1 + corners * 0.16;
-
-            renderBudget(area, wallArea, tileArea, wpArea, config);
-            autoSave();
+            updateCalculation();
         }
 
         function exportToExcel() {
@@ -404,13 +438,7 @@
             // 分頁 2: 單價設定
             const priceData = [["項目ID", "項目名稱", "類別", "單位", "當前設定單價"]];
             masterLibrary.forEach(item => {
-                priceData.push([
-                    item.id,
-                    item.name,
-                    item.cat,
-                    item.unit,
-                    getEffectivePrice(item.id)
-                ]);
+                priceData.push([item.id, item.name, item.cat, item.unit, getEffectivePrice(item.id)]);
             });
             XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(priceData), "單價設定");
 
@@ -419,6 +447,8 @@
                 ["規格名稱", "數值"],
                 ["長度", document.getElementById('len').value],
                 ["寬度", document.getElementById('wid').value],
+                ["面積", document.getElementById('calc_area').value],
+                ["周長", document.getElementById('calc_perimeter').value],
                 ["隔間高度", document.getElementById('h_wall').value],
                 ["貼磚高度", document.getElementById('h_tile').value],
                 ["地坪陰角", document.getElementById('corner_count').value],
@@ -444,20 +474,16 @@
                     const data = new Uint8Array(evt.target.result);
                     const workbook = XLSX.read(data, {type: 'array'});
                     
-                    // 1. 讀取單價庫
                     const priceSheet = workbook.Sheets["單價設定"];
                     if (priceSheet) {
                         const priceRows = XLSX.utils.sheet_to_json(priceSheet);
                         priceRows.forEach(row => {
                             const id = row["項目ID"];
                             const price = parseFloat(row["當前設定單價"]);
-                            if (id && !isNaN(price)) {
-                                userPrices[id] = price;
-                            }
+                            if (id && !isNaN(price)) userPrices[id] = price;
                         });
                     }
 
-                    // 2. 讀取規格參數
                     const configSheet = workbook.Sheets["規格參數"];
                     if (configSheet) {
                         const configRows = XLSX.utils.sheet_to_json(configSheet, {header: 1});
@@ -473,14 +499,11 @@
                         });
                     }
 
-                    // 重要：強制全面重新計算與渲染介面
                     updateCalculation(); 
-                    
-                    alert("資料匯入成功！單價與規格已連動更新。");
-                    e.target.value = ""; // 清空 input 以便下次匯入
+                    alert("匯入成功！");
+                    e.target.value = "";
                 } catch (err) {
-                    console.error(err);
-                    alert("匯入失敗：檔案格式不相容。");
+                    alert("匯入失敗：檔案格式錯誤。");
                 }
             };
             reader.readAsArrayBuffer(file);
@@ -534,7 +557,7 @@
         }
 
         function resetData() {
-            if (confirm('確定要重置所有設定與單價嗎？')) {
+            if (confirm('確定要重置嗎？')) {
                 localStorage.removeItem(STORAGE_KEY);
                 location.reload();
             }
@@ -542,6 +565,7 @@
 
         window.onload = () => {
             load();
+            handleDimInput();
             updateCalculation();
         };
     </script>
