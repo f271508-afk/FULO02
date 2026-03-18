@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>浴室裝修成本精算系統</title>
+    <title>浴室裝修成本精算系統 v1.7.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
@@ -14,15 +14,17 @@
         input[type="number"]::-webkit-outer-spin-button { opacity: 1; }
         .table-input { width: 100%; background: transparent; text-align: right; border-bottom: 1px dashed #cbd5e1; outline: none; padding: 2px; }
         .table-input:focus { border-bottom: 1px solid #3b82f6; color: #3b82f6; }
-        .sticky-sidebar { position: sticky; top: 2rem; }
+        .sticky-sidebar { position: sticky; top: 1rem; }
         .save-indicator { 
             transition: all 0.3s ease; 
             opacity: 0; 
             transform: translateY(5px);
+            display: none;
         }
         .save-indicator.show { 
             opacity: 1; 
             transform: translateY(0);
+            display: flex;
         }
         .input-group-label { @apply text-xs text-slate-400 font-bold block mb-1; }
         .input-field { @apply w-full p-2.5 border rounded-lg bg-slate-50 focus:ring-2 focus:ring-blue-400 outline-none transition-all; }
@@ -34,8 +36,8 @@
         <header class="mb-8 border-b pb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
                 <h1 class="text-3xl font-bold text-slate-800 font-mono tracking-tight">浴室裝修成本精算系統</h1>
-                <div class="flex items-center gap-3 mt-2">
-                    <span id="save_status" class="save-indicator text-[10px] bg-emerald-500 text-white px-2 py-0.5 rounded-full font-bold shadow-sm flex items-center gap-1">
+                <div class="flex items-center gap-3 mt-2 h-6">
+                    <span id="save_status" class="save-indicator text-[10px] bg-emerald-500 text-white px-2 py-0.5 rounded-full font-bold shadow-sm items-center gap-1">
                         <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"></path></svg>
                         自動儲存中
                     </span>
@@ -44,11 +46,11 @@
             <div class="flex flex-wrap gap-2">
                 <button onclick="exportToExcel()" class="flex items-center gap-1 text-xs text-white bg-emerald-600 hover:bg-emerald-700 font-bold px-4 py-2 rounded-lg shadow-sm transition-all active:scale-95">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    匯出 EXCEL
+                    匯出完整 EXCEL
                 </button>
                 <label class="flex items-center gap-1 text-xs text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 font-bold px-4 py-2 rounded-lg shadow-sm cursor-pointer transition-all active:scale-95">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                    匯入 EXCEL
+                    匯入完整 EXCEL
                     <input type="file" id="import_excel" class="hidden" accept=".xlsx, .xls" onchange="importFromExcel(event)">
                 </label>
                 <button onclick="resetData()" class="text-xs text-slate-500 hover:text-red-500 font-bold border border-slate-200 bg-white px-4 py-2 rounded-lg shadow-sm transition-all active:scale-95">重置</button>
@@ -56,7 +58,6 @@
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <!-- 左側控制面板 -->
             <div class="lg:col-span-4 space-y-6">
                 <div class="sticky-sidebar space-y-6">
                     <section class="card p-6">
@@ -66,7 +67,6 @@
                         </h2>
                         
                         <div class="space-y-4">
-                            <!-- 配置等級 -->
                             <div>
                                 <label class="input-group-label">浴室配置等級</label>
                                 <select id="config_type" class="w-full p-2.5 border rounded-lg bg-white shadow-sm font-medium outline-none focus:ring-2 focus:ring-blue-400" onchange="applyDefaultDimensions(); updateCalculation()">
@@ -77,19 +77,17 @@
                                 </select>
                             </div>
 
-                            <!-- 基礎尺寸 -->
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <label class="input-group-label">空間長度 (L) m</label>
-                                    <input type="number" id="len" value="2.5" step="0.1" class="input-field" oninput="handleDimInput('len')">
+                                    <input type="number" id="len" value="2.5" step="0.1" class="input-field" oninput="handleDimInput()">
                                 </div>
                                 <div>
                                     <label class="input-group-label">空間寬度 (W) m</label>
-                                    <input type="number" id="wid" value="1.6" step="0.1" class="input-field" oninput="handleDimInput('wid')">
+                                    <input type="number" id="wid" value="1.6" step="0.1" class="input-field" oninput="handleDimInput()">
                                 </div>
                             </div>
 
-                            <!-- 面積與周長可編輯欄位 -->
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <label class="input-group-label text-blue-500">空間面積 m²</label>
@@ -111,25 +109,21 @@
                                     <input type="number" id="h_tile" value="2.4" step="0.1" class="input-field" oninput="updateCalculation()">
                                 </div>
                             </div>
-                            <div>
-                                <label class="input-group-label">地坪陰角數 (個)</label>
-                                <input type="number" id="corner_count" value="4" step="1" class="input-field" oninput="updateCalculation()">
-                            </div>
 
                             <hr class="my-4 border-slate-100">
 
-                            <!-- 磁磚尺寸等級選擇 -->
                             <div class="grid grid-cols-1 gap-4">
                                 <div>
-                                    <label class="input-group-label">壁磚規格 (連動單價)</label>
+                                    <label class="input-group-label">壁磚/牆面規格 (連動單價)</label>
                                     <select id="wall_tile_level" class="w-full p-2.5 border rounded-lg bg-white shadow-sm font-medium outline-none focus:ring-2 focus:ring-blue-400 text-sm" onchange="updateCalculation()">
                                         <option value="wall_3060_std" selected>30x60 標準國產壁磚</option>
                                         <option value="wall_3060_lux">30x60 進口高級壁磚</option>
                                         <option value="wall_3075_std">30x75 大尺寸美學磚</option>
+                                        <option value="wall_spc">SPC 石塑防水壁板</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="input-group-label">地磚規格 (連動單價)</label>
+                                    <label class="input-group-label">地磚規格</label>
                                     <select id="floor_tile_level" class="w-full p-2.5 border rounded-lg bg-white shadow-sm font-medium outline-none focus:ring-2 focus:ring-blue-400 text-sm" onchange="updateCalculation()">
                                         <option value="floor_3030_std" selected>30x30 止滑標準磚</option>
                                         <option value="floor_3060_std">30x60 國產款式地磚</option>
@@ -138,10 +132,8 @@
                                 </div>
                             </div>
 
-                            <hr class="my-4 border-slate-100">
-
                             <div>
-                                <label class="input-group-label">馬桶款式等級</label>
+                                <label class="input-group-label">馬桶等級</label>
                                 <select id="toilet_level" class="w-full p-2.5 border rounded-lg bg-white shadow-sm font-medium outline-none focus:ring-2 focus:ring-blue-400" onchange="updateCalculation()">
                                     <option value="automatic">全自動智慧馬桶</option>
                                     <option value="bidet" selected>單體馬桶 + 免治座</option>
@@ -150,7 +142,7 @@
                             </div>
 
                             <div>
-                                <label class="input-group-label">面盆款式等級</label>
+                                <label class="input-group-label">面盆等級</label>
                                 <select id="basin_level" class="w-full p-2.5 border rounded-lg bg-white shadow-sm font-medium outline-none focus:ring-2 focus:ring-blue-400" onchange="updateCalculation()">
                                     <option value="luxury">豪華型雙層石材盆+浴櫃</option>
                                     <option value="standard" selected>標準型面盆 + 浴櫃</option>
@@ -159,10 +151,10 @@
                             </div>
 
                             <div>
-                                <label class="input-group-label">通風設備選擇</label>
+                                <label class="input-group-label">通風設備</label>
                                 <select id="vent_level" class="w-full p-2.5 border rounded-lg bg-white shadow-sm font-medium outline-none focus:ring-2 focus:ring-blue-400" onchange="updateCalculation()">
-                                    <option value="heater">四合一暖風機</option>
-                                    <option value="fan" selected>通風扇</option>
+                                    <option value="heater" selected>四合一暖風機</option>
+                                    <option value="fan">一般通風扇</option>
                                 </select>
                             </div>
                         </div>
@@ -185,7 +177,7 @@
                                 <p class="font-bold text-xs text-yellow-400" id="stat_waterproof">0</p>
                             </div>
                             <div>
-                                <p class="text-[9px] text-slate-400 font-bold">牆面貼磚</p>
+                                <p class="text-[9px] text-slate-400 font-bold">牆面飾面</p>
                                 <p class="font-bold text-xs" id="stat_tile">0</p>
                             </div>
                         </div>
@@ -193,9 +185,7 @@
                 </div>
             </div>
 
-            <!-- 右側清單與單價編修 -->
             <div class="lg:col-span-8 space-y-6">
-                <!-- 預預算清單 -->
                 <div class="card overflow-hidden border border-slate-200">
                     <div class="bg-slate-50 p-4 border-b flex justify-between items-center">
                         <h3 class="font-bold text-slate-700">工程預算明細表</h3>
@@ -213,22 +203,17 @@
                                     <th class="p-4 text-right">小計</th>
                                 </tr>
                             </thead>
-                            <tbody id="budget_body" class="text-sm text-slate-700 font-medium">
-                                <!-- JS 動態生成 -->
-                            </tbody>
+                            <tbody id="budget_body" class="text-sm text-slate-700 font-medium"></tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- 單價集中編修區 -->
                 <div class="card p-6 border-t-4 border-emerald-500 bg-white shadow-lg">
                     <h2 class="text-lg font-bold mb-4 flex items-center text-slate-800">
                         <svg class="w-5 h-5 mr-2 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                         單價集中編修面板
                     </h2>
-                    <div id="price_editor" class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
-                        <!-- JS 動態生成所有可編輯項目 -->
-                    </div>
+                    <div id="price_editor" class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4"></div>
                 </div>
             </div>
         </div>
@@ -236,12 +221,13 @@
 
     <script>
         const DOOR_AREA = 1.87; 
-        const STORAGE_KEY = 'bathroom_calculator_v13';
+        const STORAGE_KEY = 'bathroom_calc_v17_excel_sync';
 
         const masterLibrary = [
             { id: 'wall_3060_std', cat: '泥作工程', name: '30x60 標準國產壁磚', unit: 'm²', price: 2200 },
             { id: 'wall_3060_lux', cat: '泥作工程', name: '30x60 進口高級壁磚', unit: 'm²', price: 3200 },
             { id: 'wall_3075_std', cat: '泥作工程', name: '30x75 大尺寸美學磚', unit: 'm²', price: 3800 },
+            { id: 'wall_spc', cat: '飾面工程', name: 'SPC 石塑防水壁板 (含收邊)', unit: 'm²', price: 3500 },
             { id: 'floor_3030_std', cat: '泥作工程', name: '30x30 止滑標準地磚', unit: 'm²', price: 2300 },
             { id: 'floor_3060_std', cat: '泥作工程', name: '30x60 國產款式地磚', unit: 'm²', price: 2600 },
             { id: 'floor_3060_lux', cat: '泥作工程', name: '30x60 進口防滑地磚', unit: 'm²', price: 3500 },
@@ -255,27 +241,23 @@
             { id: 'basin_std', cat: '衛浴設備', name: '標準型面盆+浴櫃組', unit: '套', price: 18000 },
             { id: 'basin_basic', cat: '衛浴設備', name: '經濟型壁掛面盆', unit: '套', price: 6500 },
             { id: 'shower', cat: '衛浴設備', name: '淋浴龍頭及花灑', unit: '組', price: 6500 },
-            { id: 'bath', cat: '衛浴設備', name: '壓克力浴缸 (含浴缸座及龍頭)', unit: '組', price: 32000 },
+            { id: 'bath', cat: '衛浴設備', name: '壓克力浴缸 (含底座)', unit: '組', price: 32000 },
             { id: 'vent_heater', cat: '衛浴設備', name: '四合一暖風機', unit: '組', price: 16500 },
             { id: 'vent_fan', cat: '衛浴設備', name: '通風扇', unit: '組', price: 2500 },
             { id: 'door', cat: '其他', name: '浴室木門 (含門檻)', unit: '樘', price: 8500 },
             { id: 'misc', cat: '其他', name: '水電工程費', unit: '式', price: 15000 }
         ];
 
-        let userPrices = {}; 
+        let userPrices = {};
 
-        // 處理尺寸輸入 (長/寬改變 -> 面積/周長改變)
-        function handleDimInput(source) {
+        function handleDimInput() {
             const L = parseFloat(document.getElementById('len').value) || 0;
             const W = parseFloat(document.getElementById('wid').value) || 0;
-            
             document.getElementById('calc_area').value = (L * W).toFixed(2);
             document.getElementById('calc_perimeter').value = ((L + W) * 2).toFixed(2);
-            
             updateCalculation();
         }
 
-        // 處理反向輸入 (面積/周長改變 -> 長/寬改變)
         function handleReverseInput(source) {
             if (source === 'area') {
                 const area = parseFloat(document.getElementById('calc_area').value) || 0;
@@ -295,50 +277,55 @@
 
         function applyDefaultDimensions() {
             const type = document.getElementById('config_type').value;
-            const lenInput = document.getElementById('len');
-            const widInput = document.getElementById('wid');
-            if (type === '2') { lenInput.value = "1.7"; widInput.value = "1.5"; }
-            else if (type === '3_shower' || type === '3_bath') { lenInput.value = "2.5"; widInput.value = "1.6"; }
-            else if (type === '4') { lenInput.value = "3.3"; widInput.value = "1.6"; }
-            
+            if (type === '2') { document.getElementById('len').value = "1.7"; document.getElementById('wid').value = "1.5"; }
+            else if (type === '3_shower' || type === '3_bath') { document.getElementById('len').value = "2.5"; document.getElementById('wid').value = "1.6"; }
+            else if (type === '4') { document.getElementById('len').value = "3.3"; document.getElementById('wid').value = "1.6"; }
             handleDimInput();
         }
 
         function getEffectivePrice(id) {
-            if (userPrices[id] !== undefined && userPrices[id] !== null) return userPrices[id];
-            const item = masterLibrary.find(i => i.id === id);
-            return item ? item.price : 0;
+            return (userPrices[id] !== undefined) ? userPrices[id] : masterLibrary.find(i => i.id === id).price;
         }
 
         function updateCalculation() {
-            const L = parseFloat(document.getElementById('len').value) || 0;
-            const W = parseFloat(document.getElementById('wid').value) || 0;
-            const H_wall = parseFloat(document.getElementById('h_wall').value) || 0;
-            const H_tile = parseFloat(document.getElementById('h_tile').value) || 0;
-            const corners = parseInt(document.getElementById('corner_count').value) || 0;
+            const elLen = document.getElementById('len');
+            const elWid = document.getElementById('wid');
+            const elHW = document.getElementById('h_wall');
+            const elHT = document.getElementById('h_tile');
+            const elConfigType = document.getElementById('config_type');
+            const elWallTile = document.getElementById('wall_tile_level');
+            const elFloorTile = document.getElementById('floor_tile_level');
+            const elToilet = document.getElementById('toilet_level');
+            const elBasin = document.getElementById('basin_level');
+            const elVent = document.getElementById('vent_level');
+
+            if (!elLen || !elWid || !elHW || !elHT || !elConfigType || !elWallTile || !elFloorTile || !elToilet || !elBasin || !elVent) return;
+
+            const L = parseFloat(elLen.value) || 0;
+            const W = parseFloat(elWid.value) || 0;
+            const H_wall = parseFloat(elHW.value) || 0;
+            const H_tile = parseFloat(elHT.value) || 0;
             
             const area = L * W;
             const perimeter = (L + W) * 2;
-            
-            document.getElementById('calc_area').value = area.toFixed(2);
-            document.getElementById('calc_perimeter').value = perimeter.toFixed(2);
-
             const wallArea = Math.max(0, perimeter * H_wall - DOOR_AREA);
             const tileArea = Math.max(0, perimeter * H_tile - DOOR_AREA);
-            const wpArea = area + (perimeter - 0.85) * 1 + corners * 0.16;
+            const wpArea = area + (perimeter - 0.85) * 1 + 4 * 0.16;
 
             const config = {
-                type: document.getElementById('config_type').value,
-                wallTileId: document.getElementById('wall_tile_level').value,
-                floorTileId: document.getElementById('floor_tile_level').value,
-                toilet: document.getElementById('toilet_level').value,
-                basin: document.getElementById('basin_level').value,
-                vent: document.getElementById('vent_level').value
+                type: elConfigType.value,
+                wallTileId: elWallTile.value,
+                floorTileId: elFloorTile.value,
+                toilet: elToilet.value,
+                basin: elBasin.value,
+                vent: elVent.value
             };
 
             document.getElementById('stat_area').innerText = area.toFixed(2);
             document.getElementById('stat_tile').innerText = tileArea.toFixed(2);
             document.getElementById('stat_waterproof').innerText = wpArea.toFixed(2);
+            document.getElementById('calc_area').value = area.toFixed(2);
+            document.getElementById('calc_perimeter').value = perimeter.toFixed(2);
 
             renderBudget(area, wallArea, tileArea, wpArea, config);
             renderEditor(config);
@@ -348,49 +335,38 @@
         function renderBudget(area, wallArea, tileArea, wpArea, config) {
             const tbody = document.getElementById('budget_body');
             let grandTotal = 0;
-            let activeItems = [];
+            let activeItems = [
+                { id: 'partition', qty: wallArea },
+                { id: 'waterproof', qty: wpArea },
+                { id: config.floorTileId, qty: area },
+                { id: config.wallTileId, qty: tileArea },
+                { id: 'ceiling', qty: area }
+            ];
 
-            activeItems.push({ id: 'partition', qty: wallArea });
-            activeItems.push({ id: 'waterproof', qty: wpArea });
-            activeItems.push({ id: config.floorTileId, qty: area });
-            activeItems.push({ id: config.wallTileId, qty: tileArea });
-            activeItems.push({ id: 'ceiling', qty: area });
+            if (config.type.includes('shower') || config.type === '4') activeItems.push({ id: 'shower', qty: 1 });
+            if (config.type.includes('bath') || config.type === '4') activeItems.push({ id: 'bath', qty: 1 });
 
-            if (config.type === '3_shower' || config.type === '4') activeItems.push({ id: 'shower', qty: 1 });
-            if (config.type === '3_bath' || config.type === '4') activeItems.push({ id: 'bath', qty: 1 });
+            const tMap = { 'automatic': 'toilet_auto', 'bidet': 'toilet_bidet', 'standard': 'toilet_std' };
+            activeItems.push({ id: tMap[config.toilet], qty: 1 });
+            const bMap = { 'luxury': 'basin_luxury', 'standard': 'basin_std', 'basic': 'basin_basic' };
+            activeItems.push({ id: bMap[config.basin], qty: 1 });
+            activeItems.push({ id: config.vent === 'heater' ? 'vent_heater' : 'vent_fan', qty: 1 });
+            activeItems.push({ id: 'door', qty: 1 }, { id: 'misc', qty: 1 });
 
-            if (config.toilet === 'automatic') activeItems.push({ id: 'toilet_auto', qty: 1 });
-            else if (config.toilet === 'bidet') activeItems.push({ id: 'toilet_bidet', qty: 1 });
-            else activeItems.push({ id: 'toilet_std', qty: 1 });
-
-            if (config.basin === 'luxury') activeItems.push({ id: 'basin_luxury', qty: 1 });
-            else if (config.basin === 'standard') activeItems.push({ id: 'basin_std', qty: 1 });
-            else activeItems.push({ id: 'basin_basic', qty: 1 });
-
-            if (config.vent === 'heater') activeItems.push({ id: 'vent_heater', qty: 1 });
-            else activeItems.push({ id: 'vent_fan', qty: 1 });
-
-            activeItems.push({ id: 'door', qty: 1 });
-            activeItems.push({ id: 'misc', qty: 1 });
-
-            const rows = activeItems.map(ai => {
+            tbody.innerHTML = activeItems.map(ai => {
                 const lib = masterLibrary.find(l => l.id === ai.id);
                 const price = getEffectivePrice(ai.id);
                 const sub = Math.round(ai.qty * price);
                 grandTotal += sub;
-                return `
-                    <tr class="border-b border-slate-100 hover:bg-blue-50">
-                        <td class="p-4 text-[10px] text-slate-400 font-bold uppercase">${lib.cat}</td>
-                        <td class="p-4 font-bold text-slate-800">${lib.name}</td>
-                        <td class="p-4 text-right font-mono">${ai.qty.toFixed(2).replace(/\.00$/, '')}</td>
-                        <td class="p-4 text-right text-slate-400 text-xs">${lib.unit}</td>
-                        <td class="p-4 text-right text-slate-500">NT$ ${Math.round(price).toLocaleString()}</td>
-                        <td class="p-4 text-right font-black text-slate-900">NT$ ${sub.toLocaleString()}</td>
-                    </tr>
-                `;
+                return `<tr class="border-b border-slate-100 hover:bg-blue-50">
+                    <td class="p-4 text-[10px] text-slate-400 font-bold uppercase">${lib.cat}</td>
+                    <td class="p-4 font-bold text-slate-800">${lib.name}</td>
+                    <td class="p-4 text-right font-mono">${ai.qty.toFixed(2).replace(/\.00$/, '')}</td>
+                    <td class="p-4 text-right text-slate-400 text-xs">${lib.unit}</td>
+                    <td class="p-4 text-right text-slate-500">NT$ ${Math.round(price).toLocaleString()}</td>
+                    <td class="p-4 text-right font-black text-slate-900">NT$ ${sub.toLocaleString()}</td>
+                </tr>`;
             }).join('');
-
-            tbody.innerHTML = rows;
             document.getElementById('grand_total').innerText = `NT$ ${grandTotal.toLocaleString()}`;
         }
 
@@ -399,21 +375,16 @@
             editor.innerHTML = masterLibrary.map(item => {
                 const isActive = (item.id === config.wallTileId || item.id === config.floorTileId);
                 const currentVal = getEffectivePrice(item.id);
-
-                return `
-                    <div class="flex items-center justify-between py-2 border-b border-slate-50 hover:bg-emerald-50 px-3 rounded-lg transition-all group ${isActive ? 'bg-blue-50 border-blue-200 shadow-sm' : ''}">
-                        <div class="flex flex-col min-w-0">
-                            <label class="text-[11px] font-bold truncate mr-2 ${isActive ? 'text-blue-700' : 'text-slate-500'}">${item.name}</label>
-                            <span class="text-[9px] text-slate-300 font-mono">${item.cat}</span>
-                        </div>
-                        <div class="flex items-center">
-                            <span class="text-[10px] text-slate-300 mr-2 font-mono">/ ${item.unit}</span>
-                            <input type="number" value="${Math.round(currentVal)}" 
-                                   class="table-input text-emerald-600 font-black w-24 text-right" 
-                                   oninput="updateUserPrice('${item.id}', this.value)">
-                        </div>
+                return `<div class="flex items-center justify-between py-2 border-b border-slate-50 hover:bg-emerald-50 px-3 rounded-lg transition-all group ${isActive ? 'bg-blue-50 border-blue-200' : ''}">
+                    <div class="flex flex-col min-w-0">
+                        <label class="text-[11px] font-bold truncate mr-2 ${isActive ? 'text-blue-700' : 'text-slate-500'}">${item.name}</label>
+                        <span class="text-[9px] text-slate-300 font-mono">${item.cat}</span>
                     </div>
-                `;
+                    <div class="flex items-center">
+                        <span class="text-[10px] text-slate-300 mr-2 font-mono">/ ${item.unit}</span>
+                        <input type="number" value="${Math.round(currentVal)}" class="table-input text-emerald-600 font-black w-24 text-right" oninput="updateUserPrice('${item.id}', this.value)">
+                    </div>
+                </div>`;
             }).join('');
         }
 
@@ -422,21 +393,81 @@
             updateCalculation();
         }
 
+        function autoSave() {
+            const elLen = document.getElementById('len');
+            if (!elLen) return;
+            const state = {
+                dims: { 
+                    l: elLen.value, 
+                    w: document.getElementById('wid').value, 
+                    hw: document.getElementById('h_wall').value, 
+                    ht: document.getElementById('h_tile').value 
+                },
+                config: { 
+                    ct: document.getElementById('config_type').value, 
+                    wt: document.getElementById('wall_tile_level').value, 
+                    ft: document.getElementById('floor_tile_level').value, 
+                    tl: document.getElementById('toilet_level').value, 
+                    bl: document.getElementById('basin_level').value, 
+                    vl: document.getElementById('vent_level').value 
+                },
+                userPrices: userPrices
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            const status = document.getElementById('save_status');
+            if (status) {
+                status.classList.add('show');
+                clearTimeout(window.saveTimer);
+                window.saveTimer = setTimeout(() => status.classList.remove('show'), 1000);
+            }
+        }
+
+        function load() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (!saved) { updateCalculation(); return; }
+            try {
+                const d = JSON.parse(saved);
+                applyState(d);
+            } catch (e) { updateCalculation(); }
+        }
+
+        function applyState(d) {
+            if (d.dims) {
+                document.getElementById('len').value = d.dims.l;
+                document.getElementById('wid').value = d.dims.w;
+                document.getElementById('h_wall').value = d.dims.hw;
+                document.getElementById('h_tile').value = d.dims.ht;
+            }
+            if (d.config) {
+                document.getElementById('config_type').value = d.config.ct;
+                document.getElementById('wall_tile_level').value = d.config.wt;
+                document.getElementById('floor_tile_level').value = d.config.ft;
+                document.getElementById('toilet_level').value = d.config.tl;
+                document.getElementById('basin_level').value = d.config.bl;
+                document.getElementById('vent_level').value = d.config.vl || 'heater';
+            }
+            userPrices = d.userPrices || {};
+            updateCalculation();
+        }
+
+        function resetData() {
+            if (confirm("確定要重置所有數據嗎？自定義單價將會消失。")) { localStorage.removeItem(STORAGE_KEY); location.reload(); }
+        }
+
+        // --- EXCEL 功能升級 ---
+
         function exportToExcel() {
             const wb = XLSX.utils.book_new();
-            const rows = Array.from(document.querySelectorAll("#budget_body tr")).map(tr => 
+            
+            // 1. 預算明細表
+            const budgetRows = Array.from(document.querySelectorAll("#budget_body tr")).map(tr => 
                 Array.from(tr.querySelectorAll("td")).map(td => td.innerText.replace("NT$ ", "").replace(/,/g, ""))
             );
-            const data = [["類別", "項目名稱", "數量", "單位", "單價", "小計"], ...rows];
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), "預算明細表");
-            
-            const priceData = [["項目ID", "項目名稱", "類別", "單位", "當前設定單價"]];
-            masterLibrary.forEach(item => {
-                priceData.push([item.id, item.name, item.cat, item.unit, getEffectivePrice(item.id)]);
-            });
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(priceData), "單價設定");
+            const wsBudget = XLSX.utils.aoa_to_sheet([["類別", "項目名稱", "數量", "單位", "單價", "小計"], ...budgetRows]);
+            XLSX.utils.book_append_sheet(wb, wsBudget, "預算明細表");
 
-            const configData = [
+            // 2. 規格參數
+            const paramData = [
                 ["規格名稱", "數值"],
                 ["長度", document.getElementById('len').value],
                 ["寬度", document.getElementById('wid').value],
@@ -444,7 +475,6 @@
                 ["周長", document.getElementById('calc_perimeter').value],
                 ["隔間高度", document.getElementById('h_wall').value],
                 ["貼磚高度", document.getElementById('h_tile').value],
-                ["地坪陰角", document.getElementById('corner_count').value],
                 ["配置類型ID", document.getElementById('config_type').value],
                 ["壁磚類型ID", document.getElementById('wall_tile_level').value],
                 ["地磚類型ID", document.getElementById('floor_tile_level').value],
@@ -452,7 +482,16 @@
                 ["面盆類型ID", document.getElementById('basin_level').value],
                 ["通風類型ID", document.getElementById('vent_level').value]
             ];
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(configData), "規格參數");
+            const wsParams = XLSX.utils.aoa_to_sheet(paramData);
+            XLSX.utils.book_append_sheet(wb, wsParams, "規格參數");
+
+            // 3. 單價設定
+            const priceData = [["項目ID", "項目名稱", "類別", "單位", "當前設定單價"]];
+            masterLibrary.forEach(item => {
+                priceData.push([item.id, item.name, item.cat, item.unit, getEffectivePrice(item.id)]);
+            });
+            const wsPrices = XLSX.utils.aoa_to_sheet(priceData);
+            XLSX.utils.book_append_sheet(wb, wsPrices, "單價設定");
 
             XLSX.writeFile(wb, "浴室裝修報價單.xlsx");
         }
@@ -460,107 +499,52 @@
         function importFromExcel(e) {
             const file = e.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = function(evt) {
                 try {
-                    const data = new Uint8Array(evt.target.result);
-                    const workbook = XLSX.read(data, {type: 'array'});
+                    const workbook = XLSX.read(new Uint8Array(evt.target.result), {type: 'array'});
                     
+                    // 讀取單價
                     const priceSheet = workbook.Sheets["單價設定"];
                     if (priceSheet) {
-                        const priceRows = XLSX.utils.sheet_to_json(priceSheet);
-                        priceRows.forEach(row => {
-                            const id = row["項目ID"];
-                            const price = parseFloat(row["當前設定單價"]);
-                            if (id && !isNaN(price)) userPrices[id] = price;
+                        const priceJson = XLSX.utils.sheet_to_json(priceSheet);
+                        priceJson.forEach(row => {
+                            if (row["項目ID"] && row["當前設定單價"]) {
+                                userPrices[row["項目ID"]] = parseFloat(row["當前設定單價"]);
+                            }
                         });
                     }
 
-                    const configSheet = workbook.Sheets["規格參數"];
-                    if (configSheet) {
-                        const configRows = XLSX.utils.sheet_to_json(configSheet, {header: 1});
-                        configRows.forEach(row => {
-                            const key = row[0];
-                            const val = row[1];
-                            const elMap = {
-                                "長度": "len", "寬度": "wid", "隔間高度": "h_wall", "貼磚高度": "h_tile", "地坪陰角": "corner_count",
-                                "配置類型ID": "config_type", "壁磚類型ID": "wall_tile_level", "地磚類型ID": "floor_tile_level",
-                                "馬桶類型ID": "toilet_level", "面盆類型ID": "basin_level", "通風類型ID": "vent_level"
-                            };
-                            if (elMap[key]) document.getElementById(elMap[key]).value = val;
-                        });
+                    // 讀取規格
+                    const paramSheet = workbook.Sheets["規格參數"];
+                    if (paramSheet) {
+                        const paramJson = XLSX.utils.sheet_to_json(paramSheet);
+                        const pMap = {};
+                        paramJson.forEach(row => pMap[row["規格名稱"]] = row["數值"]);
+
+                        if (pMap["長度"]) document.getElementById('len').value = pMap["長度"];
+                        if (pMap["寬度"]) document.getElementById('wid').value = pMap["寬度"];
+                        if (pMap["隔間高度"]) document.getElementById('h_wall').value = pMap["隔間高度"];
+                        if (pMap["貼磚高度"]) document.getElementById('h_tile').value = pMap["貼磚高度"];
+                        if (pMap["配置類型ID"]) document.getElementById('config_type').value = pMap["配置類型ID"];
+                        if (pMap["壁磚類型ID"]) document.getElementById('wall_tile_level').value = pMap["壁磚類型ID"];
+                        if (pMap["地磚類型ID"]) document.getElementById('floor_tile_level').value = pMap["地磚類型ID"];
+                        if (pMap["馬桶類型ID"]) document.getElementById('toilet_level').value = pMap["馬桶類型ID"];
+                        if (pMap["面盆類型ID"]) document.getElementById('basin_level').value = pMap["面盆類型ID"];
+                        if (pMap["通風類型ID"]) document.getElementById('vent_level').value = pMap["通風類型ID"];
                     }
 
-                    updateCalculation(); 
+                    updateCalculation();
                     alert("匯入成功！");
                     e.target.value = "";
-                } catch (err) {
-                    alert("匯入失敗：檔案格式錯誤。");
+                } catch (err) { 
+                    alert("匯入失敗。"); 
                 }
             };
             reader.readAsArrayBuffer(file);
         }
 
-        function autoSave() {
-            const state = {
-                dims: {
-                    l: document.getElementById('len').value,
-                    w: document.getElementById('wid').value,
-                    hw: document.getElementById('h_wall').value,
-                    ht: document.getElementById('h_tile').value,
-                    cc: document.getElementById('corner_count').value
-                },
-                config: {
-                    ct: document.getElementById('config_type').value,
-                    wt: document.getElementById('wall_tile_level').value,
-                    ft: document.getElementById('floor_tile_level').value,
-                    tl: document.getElementById('toilet_level').value,
-                    bl: document.getElementById('basin_level').value,
-                    vl: document.getElementById('vent_level').value
-                },
-                userPrices: userPrices
-            };
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-            const status = document.getElementById('save_status');
-            status.classList.add('show');
-            setTimeout(() => status.classList.remove('show'), 1500);
-        }
-
-        function load() {
-            const saved = localStorage.getItem(STORAGE_KEY);
-            if (!saved) return;
-            try {
-                const d = JSON.parse(saved);
-                document.getElementById('len').value = d.dims.l;
-                document.getElementById('wid').value = d.dims.w;
-                document.getElementById('h_wall').value = d.dims.hw;
-                document.getElementById('h_tile').value = d.dims.ht;
-                document.getElementById('corner_count').value = d.dims.cc;
-                
-                document.getElementById('config_type').value = d.config.ct;
-                document.getElementById('wall_tile_level').value = d.config.wt;
-                document.getElementById('floor_tile_level').value = d.config.ft;
-                document.getElementById('toilet_level').value = d.config.tl;
-                document.getElementById('basin_level').value = d.config.bl;
-                document.getElementById('vent_level').value = d.config.vl;
-                
-                userPrices = d.userPrices || {};
-            } catch(e) {}
-        }
-
-        function resetData() {
-            if (confirm('確定要重置嗎？')) {
-                localStorage.removeItem(STORAGE_KEY);
-                location.reload();
-            }
-        }
-
-        window.onload = () => {
-            load();
-            handleDimInput();
-            updateCalculation();
-        };
+        window.onload = load;
     </script>
 </body>
 </html>
